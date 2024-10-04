@@ -1,10 +1,19 @@
-def listmax(list_max):
-    """Function returning max of list"""
-    if not list_max:
-        return None
-    max_num = -999999999999
-    for i in list_max:
-        if i > max_num:
-            max_num = i
+"""
+ETL-Query script
+"""
 
-    return max_num
+from mylib.extract import extract
+from mylib.transform_load import load
+from mylib.query import query
+
+# Extract
+print("Extracting data...")
+extract()
+
+# Transform and load
+print("Transforming data...")
+load()
+
+# Query
+print("Querying data...")
+query()
