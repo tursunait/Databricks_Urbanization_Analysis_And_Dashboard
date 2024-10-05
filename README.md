@@ -2,8 +2,6 @@
 ### By Tursunai Turumbekova
 [![CI](https://github.com/tursunait/py_script_with_SQLDatabase/actions/workflows/cicd.yml/badge.svg)](https://github.com/tursunait/py_script_with_SQLDatabase/actions/workflows/cicd.yml)
 
-![4 17-etl-sqlite-RAW](https://github.com/nogibjj/sqlite-lab/assets/58792/b39b21b4-ccb4-4cc4-b262-7db34492c16d)
-
 ## Project Overview
 
 This project demonstrates how to connect to a SQL database using Python, perform CRUD operations (Create, Read, Update, and Delete), and execute SQL queries. The project also implements a CI/CD pipeline to ensure database operations work correctly and continuously. All operations can be performed via the command-line interface (CLI).
