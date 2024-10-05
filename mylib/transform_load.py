@@ -1,7 +1,6 @@
 """
 Transforms and Loads data into the local SQLite3 database
-Example:
-,general name,count_products,ingred_FPro,avg_FPro_products,avg_distance_root,ingred_normalization_term,semantic_tree_name,semantic_tree_node
+
 """
 
 import sqlite3
@@ -29,3 +28,7 @@ def load(
     conn.commit()
     conn.close()
     return "urbanizationDB"
+
+
+if __name__ == "__main__":
+    load()
