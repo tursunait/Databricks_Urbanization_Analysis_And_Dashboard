@@ -5,7 +5,6 @@ Test goes here
 
 import unittest
 from unittest.mock import patch
-import sys
 from main import main
 
 
