@@ -7,9 +7,10 @@ install:
 test:
 	python -m pytest -vv --cov=main --cov=mylib test_*.py
 
-# Run unittests directly (if you have unittest tests specifically)
+# Run unittests directly
 unittest:
-	python -m unittest discover -s tests -p "test_*.py"
+	python -m unittest discover -s . -p "test_*.py"
+
 
 # Format code with black
 format:
