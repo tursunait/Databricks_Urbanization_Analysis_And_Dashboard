@@ -5,7 +5,7 @@ Test goes here
 
 import unittest
 from unittest.mock import patch
-import main  # Import your main.py module
+import main
 
 
 class TestMainScript(unittest.TestCase):
