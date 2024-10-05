@@ -19,7 +19,7 @@ This project demonstrates how to connect to a SQL database using Python, perform
 ## File Structure
 
 The project is organized into the following structure:
-
+```bash
 py_script_with_SQLDatabase/
 │
 ├── mylib/
@@ -38,7 +38,7 @@ py_script_with_SQLDatabase/
 ├── Makefile                  # Automation for testing, linting, and formatting
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation
-
+```
 
 ## Installation
 
