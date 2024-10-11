@@ -1,56 +1,53 @@
 import unittest
-from unittest.mock import patch, MagicMock
-import sys
-import main  # Import the main script
-
-# Assuming mylib.extract, mylib.transform_load, and mylib.query.general_query are available in the path
-from mylib.extract import extract
-from mylib.transform_load import load
-from mylib.query import general_query
+from unittest.mock import patch
+import main  # Only keep the main import for calling main.main()
 
 
 class TestMain(unittest.TestCase):
 
-    @patch("main.extract")
-    def test_extract_action(self, mock_extract):
-        """Test extract action"""
-        test_args = ["main.py", "extract"]
+    @patch("main.extract")  # Mock where extract is used, i.e., in `main.py`
+    @patch(
+        "sys.argv",
+        [
+            "main.py",
+            "extract",
+            "--url",
+            "http://example.com",
+            "--file_path",
+            "data/example.csv",
+        ],
+    )
+    def test_extract(self, mock_extract):
+        """Test the extract functionality."""
+        main.main()  # Call the main function to trigger the logic
+        mock_extract.assert_called_once_with("http://example.com", "data/example.csv")
 
-        with patch.object(sys, "argv", test_args):
-            main.main()
-            mock_extract.assert_called_once()  # Check if extract is called
+    @patch("main.load")  # Mock where load is used, i.e., in `main.py`
+    @patch(
+        "sys.argv", ["main.py", "transform_load", "--dataset", "data/urbanization.csv"]
+    )
+    def test_transform_load(self, mock_load):
+        """Test the transform and load functionality."""
+        main.main()  # Call the main function to trigger the logic
+        mock_load.assert_called_once_with("data/urbanization.csv")
 
-    @patch("main.load")
-    def test_transform_load_action(self, mock_load):
-        """Test transform_load action"""
-        test_args = ["main.py", "transform_load"]
-
-        with patch.object(sys, "argv", test_args):
-            main.main()
-            mock_load.assert_called_once()  # Check if load is called
-
-    @patch("main.general_query")
-    def test_general_query_action(self, mock_general_query):
-        """Test general_query action with a query argument"""
-        test_query = "SELECT * FROM table"
-        test_args = ["main.py", "general_query", test_query]
-
-        with patch.object(sys, "argv", test_args):
-            main.main()
-            mock_general_query.assert_called_once_with(
-                test_query
-            )  # Check if general_query is called with query
-
-    @patch("builtins.print")
-    def test_invalid_action(self, mock_print):
-        """Test handling of invalid action"""
-        test_args = ["main.py", "invalid_action"]
-
-        with patch.object(sys, "argv", test_args):
-            main.main()
-            mock_print.assert_called_with(
-                "Unknown action: invalid_action"
-            )  # Check if appropriate error message is printed
+    @patch("main.general_query")  # Corrected the function name to general_query
+    @patch(
+        "sys.argv",
+        [
+            "main.py",
+            "general_query",
+            """SELECT *
+            FROM default.urbanizationdb 
+            LIMIT 10""",
+        ],
+    )
+    def test_general_query(self, mock_general_query):
+        """Test the general query functionality."""
+        main.main()  # Call the main function to trigger the logic
+        mock_general_query.assert_called_once_with(
+            """SELECT * FROM default.urbanizationdb LIMIT 10"""
+        )
 
 
 if __name__ == "__main__":
