@@ -1,6 +1,6 @@
-## Python Script interacting with SQL Database
+## Python Script interacting with Databricks 
 ### By Tursunai Turumbekova
-[![CI](https://github.com/tursunait/py_script_with_SQLDatabase/actions/workflows/cicd.yml/badge.svg)](https://github.com/tursunait/py_script_with_SQLDatabase/actions/workflows/cicd.yml)
+[![CI](https://github.com/tursunait/sql_query_databricks1_tursunai/actions/workflows/cicd.yml/badge.svg)](https://github.com/tursunait/sql_query_databricks1_tursunai/actions/workflows/cicd.yml)
 
 ## Project Overview
 
@@ -37,118 +37,12 @@ py_script_with_SQLDatabase/
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation
 ```
-
-## Installation
-
-1. Clone the repository:
-    ```bash
-    git clone https://github.com/tursunait/py_script_with_SQLDatabase.git
-    cd py_script_with_SQLDatabase
-    ```
-
-2. Set up the virtual environment and install dependencies:
-    ```bash
-    python -m venv myenvironment
-    source myenvironment/bin/activate  # On Windows use: myenvironment\Scripts\activate
-    pip install -r requirements.txt
-    ```
-
-3. Run the script:
-    ```bash
-    python main.py
-    ```
-
-## Sample CRUD Operations
-
-You can run the following commands via CLI to perform CRUD operations in the database:
-
-- **Create**:
-    ```bash
-    python main.py create_rec 1 'Alabama' 'G0100010' 32.3182 -86.9023 50000 100.5 1.0
-    ```
-
-- **Read**:
-    ```bash
-    python main.py read_data
-    ```
-
-- **Update**:
-    ```bash
-    python main.py update_rec 1 'Alabama' 'G0100010' 32.3182 -86.9023 60000 120.5 2.0
-    ```
-
-- **Delete**:
-    ```bash
-    python main.py delete_rec 'G0100010'
-    ```
-
-- **Execute General Query**:
-    ```bash
-    python main.py general_query "SELECT * FROM urbanizationDB WHERE state = 'Alabama';"
-    ```
-![CLI](CLI.png)
-
-Explanations of the functions can be found in the `main.py` script, where each CRUD operation is implemented.
-
-### CI/CD, Linting, and Testing
-
-- **Check format and test errors**:
-    ```bash
-    make format
-    ```
-
-- **Lint code**:
-    ```bash
-    make lint
-    ```
-
-- **Test code**:
-    ```bash
-    make test
-    ```
-## Query Log
-This project includes a query log feature that tracks all SQL queries executed during the CRUD operations. The log records the following:
-SQL statements for inserts, updates, deletes, and selects.
-Each query is stored in a Markdown file **(query_log.md)**, providing a clear history of all database interactions.
-
-
-## How to Use
-
-### Running CRUD Operations:
-
-- **Create Record**:
-    ```bash
-    python main.py create_rec <statefips> <state> <gisjoin> <lat_tract> <long_tract> <population> <adj_radiuspop_5> <urbanindex>
-    ```
-
-- **Read Data**:
-    ```bash
-    python main.py read_data
-    ```
-
-- **Update Record**:
-    ```bash
-    python main.py update_rec <statefips> <state> <gisjoin> <lat_tract> <long_tract> <population> <adj_radiuspop_5> <urbanindex>
-    ```
-
-- **Delete Record**:
-    ```bash
-    python main.py delete_rec <gisjoin>
-    ```
-
-- **Execute General Query**:
-    ```bash
-    python main.py general_query <SQL query>
-    ```
-
-### Testing and CI/CD Pipeline:
-
-The project includes unit tests for each CRUD operation and a CI/CD pipeline to automate the testing process.
-
-- To run tests:
-    ```bash
-    make unittest
-    ```
-
-- The CI/CD pipeline will automatically verify the correctness of the database operations by loading the `.db` file and running the tests as part of the pipeline process.
-
+## Purpose of project
+The goal of this project is to create an ETL-Query pipeline utilizing a cloud service like Databricks. This pipeline will involve tasks such as extracting data from FiveThirtyEight's public datasets, cleaning and transforming the data, then loading it into Databricks SQL Warehouse. Once the data is in place, we'll be able to run complex queries that may involve tasks like joining tables, aggregating data, and sorting results. This will be accomplished by establishing a database connection to Databricks. 
+## Preparation
+1. open codespaces 
+2. wait for container to be built and virtual environment to be activated with requirements.txt installed 
+3. make your own .env file to store your Databricks' secrets as it requires a conncection to be established to Databricks
+3. extract: run `make extract`
+4. transform and load: run `make transform_load`
+4. query: run `make query` or alternatively write your own query using `python main.py general_query <insert query>`
