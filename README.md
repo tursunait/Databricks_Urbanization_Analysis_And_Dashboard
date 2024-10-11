@@ -1,6 +1,6 @@
 ## Python Script interacting with Databricks 
 ### By Tursunai Turumbekova
-[![CI](https://github.com/tursunait/sql_query_databricks1_tursunai/actions/workflows/cicd.yml/badge.svg)](https://github.com/tursunait/sql_query_databricks1_tursunai/actions/workflows/cicd.yml)
+[![CI](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml/badge.svg)](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml)
 
 ## Project Overview
 
