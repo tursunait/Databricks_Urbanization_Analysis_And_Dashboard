@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 
 
 def load(
-    dataset="/Users/tusunaiturumbekova/Desktop/DE/sql_query_databricks1_tursunaiv/data/urbanization.csv",
+    dataset="/Users/tusunaiturumbekova/SQL_Query_Databricks1_Tursunai/data/urbanization.csv",
 ):
     """Transforms and Loads data into the local Databricks database."""
     # Load the dataset into a DataFrame
@@ -53,3 +53,7 @@ def load(
     except Exception as e:
         print(f"An error occurred: {e}")
         return "failure"
+
+
+if __name__ == "__main__":
+    load()
