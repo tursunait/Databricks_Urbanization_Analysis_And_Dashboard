@@ -20,9 +20,6 @@ def handle_arguments(args):
         choices=[
             "extract",
             "transform_load",
-            "update_rec",
-            "delete_rec",
-            "create_rec",
             "general_query",
             "read_data",
         ],
