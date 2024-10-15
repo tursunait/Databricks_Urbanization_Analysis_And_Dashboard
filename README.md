@@ -38,7 +38,7 @@ py_script_with_SQLDatabase/
 └── README.md                 # Project documentation
 ```
 ## Purpose of project
-The goal of this project is to create an ETL-Query pipeline utilizing a cloud service like Databricks. This pipeline will involve tasks such as extracting data from FiveThirtyEight's public datasets, cleaning and transforming the data, then loading it into Databricks SQL Warehouse. Once the data is in place, we'll be able to run complex queries that may involve tasks like joining tables, aggregating data, and sorting results. This will be accomplished by establishing a database connection to Databricks. 
+The goal of this project is to create an ETL-Query pipeline utilizing a cloud service like Databricks. This pipeline will involve tasks such as extracting data on Urbanization index from from FiveThirtyEight's public dataset, cleaning and transforming the data, then loading it into Databricks SQL Warehouse. Once the data is in place, we'll be able to run complex queries that may involve tasks like joining tables, aggregating data, and sorting results. This will be accomplished by establishing a database connection to Databricks. 
 ## Preparation
 1. open codespaces 
 2. wait for container to be built and virtual environment to be activated with requirements.txt installed 
