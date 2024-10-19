@@ -27,17 +27,19 @@ Here are a few queries you might find fun to run:
 ### Top 5 States by Average Urbanization Index:
 
 ```sql
-Copy code
-SELECT state, AVG(urbanindex) AS avg_urbanindex
-FROM default.urbanizationdb_tt284
-GROUP BY state
-ORDER BY avg_urbanindex DESC
+SELECT us.state, round(avg(u.urbanindex)) AS urbanindex
+FROM default.urbanization_statedb_tt284 us RIGHT JOIN default.urbanizationdb_tt284 u ON us.state=u.state
+GROUP BY us.state
+ORDER BY urbanindex desc
 LIMIT 5;
 ```
+SELECT us.state, round(avg(u.urbanindex)) AS urbanindex
+FROM default.urbanization_statedb_tt284 us RIGHT JOIN default.urbanizationdb_tt284 u on us.state=u.state
+group by us.state
+order by urbanindex desc;
 ### States with the Largest Rural Areas (Low Urbanization Index):
 
 ```sql
-Copy code
 SELECT state, COUNT(*) AS rural_area_count
 FROM default.urbanizationdb_tt284
 WHERE urbanindex < 5
@@ -47,7 +49,6 @@ ORDER BY rural_area_count DESC;
 ### Correlation Between Population and Urbanization Index:
 
 ```sql
-Copy code
 SELECT CORR(urbanindex, population) AS correlation
 FROM default.urbanizationdb_tt284;
 ```
@@ -57,7 +58,7 @@ The datasets used in this project are public datasets from FiveThirtyEight, focu
 ## Project Structure 🗂️
 Here’s a quick overview of the key files and directories:
 
-plaintext
+```plaintext
 Copy code
 SQL_Query_Databricks1_Tursunai/
 ├── data/                         # Contains the raw datasets
@@ -69,7 +70,7 @@ SQL_Query_Databricks1_Tursunai/
 ├── requirements.txt              # Python dependencies
 ├── README.md                     # This fun guide!
 └── main.py                       # Main script for executing SQL queries
-
+```
 ## Tools and Technologies 🛠️
 *Python*: For scripting the ETL and querying process.
 *Databricks*: Cloud service for querying and analyzing data.
