@@ -78,5 +78,16 @@ SQL_Query_Databricks1_Tursunai/
 *dotenv*: For environment variable management.
 *Makefile*: To automate tasks like extracting, transforming, and querying.
 
+## Interactive Databricks Dashboard for Urbanization in the US 🌆
+This Databricks dashboard provides a visual exploration of urbanization trends across the United States. It combines population distribution, urbanization indices, and geographical data to give users a clear picture of urban development by state.
+
+Population Distribution: Displays the population across states, highlighting areas with higher urbanization.
+Geospatial Maps: Show population density and median urbanization index, offering an intuitive, visual understanding of demographic trends.
+Data Table: Provides specific metrics like population and urbanization index for further analysis.
+Why This Matters:
+Including this dashboard in the project enhances user interaction and understanding of complex data. It highlights Databricks' capabilities for processing and visualizing large datasets, providing actionable insights into urbanization patterns.
+The dataset contains geospatial data of the locations with urban density, an interactive 
+![Dashboard](Dashboard.png)
+
 ## License 📄
 This project is licensed under the MIT License. See the LICENSE file for more details.
