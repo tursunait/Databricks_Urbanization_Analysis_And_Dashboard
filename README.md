@@ -1,6 +1,6 @@
 ## Python Script interacting SQL Queries with Databricks - Urbanization Index Analysis 🚀
 ### By Tursunai Turumbekova
-[![CI](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml/badge.svg)](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml)
+[![CI](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml/badge.svg?branch=main)](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml)
 
 Welcome to my project, where data meets cloud! This project takes you on an analytical journey through urbanization data, leveraging **Databricks SQL Warehouse** to query large datasets and discover patterns about urbanization across various states. We’ll be diving into urbanization metrics, from identifying the most urbanized states to analyzing population distributions. 🌍🏙️
 
