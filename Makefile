@@ -36,3 +36,15 @@ deploy:
 
 # Run all steps (install, lint, test, format, deploy)
 all: install lint test format deploy
+
+extract:
+	python main.py extract
+
+transform_load: 
+	python main.py transform_load
+
+query:
+	python main.py general_query "SELECT us.state, round(avg(u.urbanindex)) AS urbanindex
+FROM default.urbanization_statedb_tt284 us RIGHT JOIN default.urbanizationdb_tt284 u on us.state=u.state
+group by us.state
+order by urbanindex desc"
