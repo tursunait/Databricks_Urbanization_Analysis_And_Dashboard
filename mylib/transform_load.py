@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 
 
 def load(
-    dataset="/Users/tusunaiturumbekova/SQL_Query_Databricks1_Tursunai/data/urbanization.csv",
-    dataset2="/Users/tusunaiturumbekova/SQL_Query_Databricks1_Tursunai/data/urbanization_state.csv",
+    dataset="data/urbanization.csv",
+    dataset2="data/urbanization_state.csv",
 ):
     """Transforms and Loads the top 5 locations by urbanindex for each state into the Databricks database."""
     print("Loading datasets...")
