@@ -20,9 +20,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Set up Environment Variables
         run: |
-          echo "SERVER_HOSTNAME=${{ secrets.SERVER_HOSTNAME }}" >> $DE_DATABRICKS
-          echo "HTTP_PATH=${{ secrets.HTTP_PATH }}" >> $DE_DATABRICKS
-          echo "ACCESS_TOKEN=${{ secrets.ACCESS_TOKEN }}" >> $DE_DATABRICKS
+          echo "SERVER_HOSTNAME=${{ secrets.SERVER_HOSTNAME }}" >> $GITHUB_ENV
+          echo "HTTP_PATH=${{ secrets.HTTP_PATH }}" >> $GITHUB_ENV
+          echo "ACCESS_TOKEN=${{ secrets.DE_DATABRICKS }}" >> $GITHUB_ENV
       - name: install packages
         run: make install
       - name: lint
