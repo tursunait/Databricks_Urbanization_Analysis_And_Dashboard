@@ -1,89 +1,42 @@
 """
 Transforms and Loads data into Databricks
 """
-
 import os
-from databricks import sql
-import pandas as pd
+from pyspark.sql import SparkSession
 from dotenv import load_dotenv
 
 
-# Load the csv files and insert into Databricks
 def load(
-    dataset="data/urbanization.csv",
-    dataset2="data/urbanization_state.csv",
+    dataset="/dbfs/tmp/urbanization.csv",
+    dataset2="/dbfs/tmp/urbanization_state.csv",
 ):
-    """Transforms and Loads data into Databricks"""
+    """Transforms and Loads data into Databricks using Spark"""
 
-    # Load datasets
-    print("Loading datasets...")
-    df = pd.read_csv(dataset, delimiter=",")
-    df2 = pd.read_csv(dataset2, delimiter=",")
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("UrbanizationDataLoad").getOrCreate()
+
+    # Load datasets into Spark DataFrames
+    print("Loading datasets into Spark DataFrames...")
+    df = spark.read.csv(dataset, header=True, inferSchema=True)
+    df2 = spark.read.csv(dataset2, header=True, inferSchema=True)
 
     # Load environment variables for Databricks connection
     load_dotenv()
-    server_host = os.getenv("SERVER_HOSTNAME")
-    access_token = os.getenv("ACCESS_TOKEN")
-    http_path = os.getenv("HTTP_PATH")
+    database = "default"
+    table1 = "urbanizationdb_tt284"
+    table2 = "urbanization_stateDB_tt284"
 
     try:
-        # Connect to Azure Databricks
-        with sql.connect(
-            server_hostname=server_host,
-            http_path=http_path,
-            access_token=access_token,
-        ) as connection:
-            c = connection.cursor()
+        # Use Spark to create or replace the first table and insert data
+        print(f"Writing data to table: {database}.{table1}")
+        df.write.format("delta").mode("overwrite").saveAsTable(f"{database}.{table1}")
 
-            # Check if ServeTimesDB already exists, if not, create it
-            c.execute("SHOW TABLES FROM default LIKE 'urbanizationDB_tt284'")
-            result = c.fetchall()
+        # Use Spark to create or replace the second table and insert data
+        print(f"Writing data to table: {database}.{table2}")
+        df2.select("state", "urbanindex").write.format("delta").mode("overwrite").saveAsTable(f"{database}.{table2}")
 
-            if not result:
-                # Create urbanizationDB_tt284 if it doesn't exist
-                c.execute(
-                    """
-                    CREATE TABLE default.urbanizationDB_tt284 (
-                        statefips INT, state STRING, gisjoin STRING, lat_tract FLOAT,
-                        long_tract FLOAT, population INT, adj_radiuspop_5 FLOAT, urbanindex FLOAT
-                    )
-                    """
-                )
-                # Insert data into urbanizationDB_tt284
-                data_to_insert_df1 = df.values.tolist()
-                insert_query_df1 = """
-                    INSERT INTO default.urbanizationDB_tt284 
-                    (statefips, state, gisjoin, lat_tract, long_tract, population, adj_radiuspop_5, urbanindex)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """
-                c.executemany(insert_query_df1, data_to_insert_df1)
-
-            # Check if urbanization_stateDB_tt284 exists, if not, create it
-            c.execute("SHOW TABLES FROM default LIKE 'urbanization_stateDB_tt284'")
-            result = c.fetchall()
-
-            if not result:
-                # Create urbanization_stateDB_tt284 if it doesn't exist
-                c.execute(
-                    """
-                    CREATE TABLE default.urbanization_stateDB_tt284 (
-                        state STRING, urbanindex FLOAT
-                    )
-                    """
-                )
-                # Insert data into urbanization_stateDB_tt284
-                data_to_insert_df2 = df2[["state", "urbanindex"]].values.tolist()
-                insert_query_df2 = """
-                    INSERT INTO default.urbanization_stateDB_tt284 (state, urbanindex)
-                    VALUES (?, ?)
-                """
-                c.executemany(insert_query_df2, data_to_insert_df2)
-
-            # Commit all changes
-            connection.commit()
-
-            print("Data inserted successfully.")
-            return "success"
+        print("Data inserted successfully.")
+        return "success"
 
     except Exception as e:
         print(f"An error occurred: {e}")

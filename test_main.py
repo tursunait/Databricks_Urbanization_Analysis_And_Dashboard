@@ -31,6 +31,13 @@ class TestMain(unittest.TestCase):
             "SELECT * FROM default.urbanizationdb LIMIT 10"
         )
 
+    @patch("sys.argv", ["main.py", "invalid_action"])
+    def test_invalid_action(self):
+        """Test handling of invalid actions."""
+        with self.assertRaises(SystemExit) as cm:
+            main.main()
+        self.assertEqual(cm.exception.code, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

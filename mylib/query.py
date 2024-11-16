@@ -1,34 +1,49 @@
 """Query the database"""
 
 import os
-from databricks import sql
+from pyspark.sql import SparkSession
 from dotenv import load_dotenv
 
 # Define a global variable for the log file
-LOG_FILE = "query_log.md"
+LOG_FILE = "/dbfs/tmp/query_log.md"
 
 
 def log_query(query, result="none"):
-    """adds to a query markdown file"""
+    """Adds to a query markdown file."""
     with open(LOG_FILE, "a") as file:
         file.write(f"```sql\n{query}\n```\n\n")
-        file.write(f"```response from databricks\n{result}\n```\n\n")
+        file.write(f"```response from Databricks\n{result}\n```\n\n")
 
 
 def general_query(query):
-    """runs a query a user inputs"""
+    """Runs a query a user inputs using Spark SQL."""
+    
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("DatabricksQueryRunner").getOrCreate()
 
-    load_dotenv()
-    server_h = os.getenv("SERVER_HOSTNAME")
-    access_token = os.getenv("ACCESS_TOKEN")
-    http_path = os.getenv("HTTP_PATH")
-    with sql.connect(
-        server_hostname=server_h,
-        http_path=http_path,
-        access_token=access_token,
-    ) as connection:
-        c = connection.cursor()
-        c.execute(query)
-        result = c.fetchall()
-    c.close()
-    log_query(f"{query}", result)
+    try:
+        # Execute the query
+        result = spark.sql(query).collect()
+
+        # Format result as a string
+        result_str = "\n".join([str(row) for row in result])
+        
+        # Log the query and result
+        log_query(query, result_str)
+
+        print(f"Query executed successfully:\n{query}")
+        return result
+
+    except Exception as e:
+        # Log the query and error
+        error_message = f"An error occurred: {e}"
+        log_query(query, error_message)
+        print(error_message)
+        return None
+
+
+if __name__ == "__main__":
+    # Example usage
+    sample_query = "SHOW TABLES"
+    general_query(sample_query)
+
