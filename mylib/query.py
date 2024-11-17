@@ -11,10 +11,8 @@ def get_dbutils(spark):
         print("dbutils is not available in this environment.")
         return None
 
-
 # Define a global variable for the log file
 LOG_FILE = "dbfs:/tmp/query_log.md"
-
 
 def log_query(dbutils, query, result="none"):
     """Adds to a query markdown file."""
