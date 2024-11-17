@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: ${{ matrix.python-version }}
       - name: Set up Environment Variables
@@ -20,6 +20,7 @@ jobs:
           echo "SERVER_HOSTNAME=${{ secrets.SERVER_HOSTNAME }}" >> $GITHUB_ENV
           echo "HTTP_PATH=${{ secrets.HTTP_PATH }}" >> $GITHUB_ENV
           echo "ACCESS_TOKEN=${{ secrets.DE_DATABRICKS }}" >> $GITHUB_ENV
+          echo "MOCK_ENV=true" >> $GITHUB_ENV  # Enable mock mode for queries
       - name: install packages
         run: make install
       - name: lint

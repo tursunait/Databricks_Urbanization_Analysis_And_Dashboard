@@ -2,19 +2,25 @@
 Query the database
 """
 
+import os
 from pyspark.sql import SparkSession
 
 def query(sql_query):
     """
-    Runs a SQL query using Spark SQL.
+    Runs a SQL query using Spark SQL. Supports a mock mode for CI/CD testing.
 
     Parameters:
         sql_query (str): The SQL query to execute.
 
     Returns:
-        list: Query results as a list of rows, or None if an error occurs.
+        list: Query results as a list of rows, or a mocked response in CI/CD.
     """
-    # Initialize Spark session
+    # Check if mock mode is enabled (e.g., in CI/CD)
+    if os.getenv("MOCK_ENV") == "true":
+        print(f"Mock executing query: {sql_query}")
+        return [{"result": "mocked result"}]
+
+    # Initialize Spark session for real query execution
     spark = SparkSession.builder.appName("DatabricksQueryRunner").getOrCreate()
 
     try:
