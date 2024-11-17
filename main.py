@@ -10,7 +10,7 @@ import os
 def main():
     """
     Main execution pipeline.
-    Executes the extract, load, query, and visualization steps sequentially.
+    Executes the extract, load, query steps sequentially.
     """
     # Print current working directory for debugging
     current_directory = os.getcwd()
@@ -24,13 +24,14 @@ def main():
     print("Starting transformation and loading process...")
     load()
     
-    # Step 3: Query Transformation
-    print("Starting query transformation process...")
-    query()
-    
-    # Step 4: Visualization
-    #print("Starting visualization process...")
-   # viz()
+    # Step 3: Query Execution
+    print("Starting query execution process...")
+    sample_query = "SHOW TABLES"  # Replace with your desired query
+    result = query(sample_query)
+    if result:
+        print("Query executed successfully.")
+    else:
+        print("Query execution failed.")
 
 if __name__ == "__main__":
     main()
