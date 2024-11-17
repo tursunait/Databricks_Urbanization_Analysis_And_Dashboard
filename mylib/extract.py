@@ -2,8 +2,11 @@
 Extract a dataset 
 urbanization dataset
 """
-import requests
 from pyspark.sql import SparkSession
+import requests
+
+# Initialize Spark session globally to avoid redefinition errors
+spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
 
 
 def extract(
@@ -13,9 +16,6 @@ def extract(
     file_path2="dbfs:/tmp/urbanization_state.csv",
 ):
     """Extract URLs to Databricks DBFS paths and process with Spark."""
-
-    # Initialize Spark session
-    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
 
     # Remove conflicting directory
     conflicting_path = "dbfs:/tmp/urbanization_state_subset/"
