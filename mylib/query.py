@@ -5,19 +5,29 @@ from pyspark.sql import SparkSession
 from dotenv import load_dotenv
 
 # Define a global variable for the log file
-LOG_FILE = "/dbfs/tmp/query_log.md"
+LOG_FILE = "dbfs:/tmp/query_log.md"
 
 
 def log_query(query, result="none"):
     """Adds to a query markdown file."""
-    with open(LOG_FILE, "a") as file:
-        file.write(f"```sql\n{query}\n```\n\n")
-        file.write(f"```response from Databricks\n{result}\n```\n\n")
+    try:
+        # Read existing log content if the file exists
+        existing_content = ""
+        if dbutils.fs.ls("dbfs:/tmp/"):
+            try:
+                existing_content = dbutils.fs.head(LOG_FILE)
+            except:
+                pass  # File doesn't exist yet, no content to load
+
+        # Append the new query and result to the log
+        new_content = f"```sql\n{query}\n```\n\n```response from Databricks\n{result}\n```\n\n"
+        dbutils.fs.put(LOG_FILE, existing_content + new_content, overwrite=True)
+    except Exception as e:
+        print(f"Error writing to log: {e}")
 
 
 def general_query(query):
     """Runs a query a user inputs using Spark SQL."""
-    
     # Initialize Spark session
     spark = SparkSession.builder.appName("DatabricksQueryRunner").getOrCreate()
 
@@ -27,7 +37,7 @@ def general_query(query):
 
         # Format result as a string
         result_str = "\n".join([str(row) for row in result])
-        
+
         # Log the query and result
         log_query(query, result_str)
 
@@ -46,4 +56,3 @@ if __name__ == "__main__":
     # Example usage
     sample_query = "SHOW TABLES"
     general_query(sample_query)
-
