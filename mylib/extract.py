@@ -2,17 +2,9 @@
 Extract a dataset 
 urbanization dataset
 """
-from pyspark.sql import SparkSession
+import os
 import requests
-
-# Helper function to check if `dbutils` is available
-def get_dbutils(spark):
-    try:
-        from pyspark.dbutils import DBUtils
-        return DBUtils(spark)
-    except ImportError:
-        print("dbutils is not available in this environment.")
-        return None
+from pyspark.sql import SparkSession
 
 
 def extract(
@@ -25,10 +17,6 @@ def extract(
 
     # Initialize Spark session
     spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
-    dbutils = get_dbutils(spark)
-
-    if not dbutils:
-        raise EnvironmentError("dbutils is required but not available in this environment.")
 
     # Remove conflicting directory
     conflicting_path = "dbfs:/tmp/urbanization_state_subset/"
@@ -43,8 +31,13 @@ def extract(
     data1 = requests.get(url).content.decode("utf-8")
     data2 = requests.get(url2).content.decode("utf-8")
 
-    dbutils.fs.put(file_path, data1, overwrite=True)
-    dbutils.fs.put(file_path2, data2, overwrite=True)
+    try:
+        dbutils.fs.put(file_path, data1, overwrite=True)
+        dbutils.fs.put(file_path2, data2, overwrite=True)
+        print(f"Files written to {file_path} and {file_path2}")
+    except Exception as e:
+        print(f"Error writing files: {e}")
+        raise
 
     # Read the second file into a Spark DataFrame
     df = spark.read.csv(file_path2, header=True, inferSchema=True)
@@ -56,11 +49,22 @@ def extract(
     unique_output_dir = "dbfs:/tmp/urbanization_state_subset/"
     df_subset.coalesce(1).write.mode("overwrite").csv(unique_output_dir, header=True)
 
-    # Retrieve the exact file path
-    output_files = dbutils.fs.ls(unique_output_dir)
-    output_file = [f.path for f in output_files if f.path.endswith(".csv")][0]
-    print(f"Subset saved to {output_file}")
+    # Verify the written files
+    try:
+        output_files = dbutils.fs.ls(unique_output_dir)
+        output_file = [f.path for f in output_files if f.path.endswith(".csv")][0]
+        print(f"Subset saved to {output_file}")
+    except Exception as e:
+        print(f"Failed to locate files in {unique_output_dir}: {e}")
+        raise
 
 
 if __name__ == "__main__":
+    try:
+        from pyspark.dbutils import DBUtils
+
+        dbutils = DBUtils(spark)
+    except ImportError:
+        print("dbutils is not available in this environment.")
+
     extract()
