@@ -9,7 +9,7 @@ ruff==0.0.284
 
 # Databricks-specific libraries
 pandas==1.3.5
-python-dotenv==1.0.0
+python-dotenv
 databricks-sql-connector==2.4.0
 pyspark
 requests==2.31.0
