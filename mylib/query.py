@@ -1,6 +1,5 @@
 """Query the database"""
 
-import importlib.util
 from pyspark.sql import SparkSession
 
 # Helper function to check if `dbutils` is available

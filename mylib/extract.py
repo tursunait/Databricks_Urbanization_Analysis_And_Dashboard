@@ -2,20 +2,8 @@
 Extract a dataset 
 urbanization dataset
 """
-import importlib.util
 from pyspark.sql import SparkSession
 import requests
-
-
-# Helper function to check if `dbutils` is available
-def get_dbutils(spark):
-    try:
-        from pyspark.dbutils import DBUtils
-        return DBUtils(spark)
-    except ImportError:
-        print("dbutils is not available in this environment.")
-        return None
-
 
 def extract(
     url="https://github.com/fivethirtyeight/data/raw/refs/heads/master/urbanization-index/urbanization-census-tract.csv",
