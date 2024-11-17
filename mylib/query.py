@@ -6,7 +6,6 @@ import os
 from pyspark.sql import SparkSession
 import matplotlib.pyplot as plt
 import seaborn as sns
-from pyspark.sql.functions import col
 
 
 def query_table(
