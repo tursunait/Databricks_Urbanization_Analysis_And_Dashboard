@@ -2,7 +2,6 @@
 Extract a dataset 
 urbanization dataset
 """
-import os
 import requests
 from pyspark.sql import SparkSession
 
