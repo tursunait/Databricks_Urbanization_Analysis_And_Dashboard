@@ -8,7 +8,7 @@ import requests
 
 # Check if dbutils is available
 if importlib.util.find_spec("pyspark.dbutils"):
-    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
+    pass
 else:
     from mocks import dbutils  # Use mock for local testing
 
