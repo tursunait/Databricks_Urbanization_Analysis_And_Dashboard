@@ -5,8 +5,28 @@ urbanization dataset
 from pyspark.sql import SparkSession
 import requests
 
-# Initialize Spark session globally to avoid redefinition errors
-spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
+# Fallback to mock dbutils if running outside of Databricks
+try:
+    from pyspark.dbutils import DBUtils
+    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
+    dbutils = DBUtils(spark)
+except ImportError:
+    print("dbutils is not available in this environment. Using a mock implementation.")
+    class MockDBUtils:
+        def fs(self):
+            return self
+
+        def rm(self, path, recurse):
+            print(f"Mock remove: {path}, recurse={recurse}")
+
+        def put(self, path, data, overwrite):
+            print(f"Mock put: {path}, overwrite={overwrite}")
+
+        def ls(self, path):
+            print(f"Mock ls: {path}")
+            return []
+
+    dbutils = MockDBUtils()
 
 
 def extract(
@@ -38,6 +58,9 @@ def extract(
         print(f"Error writing files: {e}")
         raise
 
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
+
     # Read the second file into a Spark DataFrame
     df = spark.read.csv(file_path2, header=True, inferSchema=True)
 
@@ -59,11 +82,4 @@ def extract(
 
 
 if __name__ == "__main__":
-    try:
-        from pyspark.dbutils import DBUtils
-
-        dbutils = DBUtils(spark)
-    except ImportError:
-        print("dbutils is not available in this environment.")
-
     extract()
