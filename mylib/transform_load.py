@@ -1,7 +1,6 @@
 """
 Transforms and Loads data into Databricks
 """
-import os
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DoubleType
 from dotenv import load_dotenv

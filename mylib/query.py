@@ -1,8 +1,11 @@
 """Query the database"""
 
-import os
+try:
+    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
+except ImportError:
+    from mocks import dbutils  # Use mock dbutils for local testing
+
 from pyspark.sql import SparkSession
-from dotenv import load_dotenv
 
 # Define a global variable for the log file
 LOG_FILE = "dbfs:/tmp/query_log.md"
@@ -13,11 +16,10 @@ def log_query(query, result="none"):
     try:
         # Read existing log content if the file exists
         existing_content = ""
-        if dbutils.fs.ls("dbfs:/tmp/"):
-            try:
-                existing_content = dbutils.fs.head(LOG_FILE)
-            except:
-                pass  # File doesn't exist yet, no content to load
+        try:
+            existing_content = dbutils.fs.head(LOG_FILE)
+        except Exception as e:
+            print(f"Log file not found. A new log will be created: {e}")
 
         # Append the new query and result to the log
         new_content = f"```sql\n{query}\n```\n\n```response from Databricks\n{result}\n```\n\n"
