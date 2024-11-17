@@ -1,11 +1,12 @@
 """Query the database"""
-
-try:
-    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
-except ImportError:
-    from mocks import dbutils  # Use mock dbutils for local testing
-
+import importlib.util
 from pyspark.sql import SparkSession
+
+# Check if dbutils is available
+if importlib.util.find_spec("pyspark.dbutils"):
+    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
+else:
+    from mocks import dbutils  # Use mock for local testing
 
 # Define a global variable for the log file
 LOG_FILE = "dbfs:/tmp/query_log.md"

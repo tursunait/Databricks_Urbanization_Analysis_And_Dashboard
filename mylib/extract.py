@@ -2,13 +2,15 @@
 Extract a dataset 
 urbanization dataset
 """
-try:
-    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
-except ImportError:
-    from mocks import dbutils  # Use mock for local testing
-
+import importlib.util
 from pyspark.sql import SparkSession
 import requests
+
+# Check if dbutils is available
+if importlib.util.find_spec("pyspark.dbutils"):
+    from pyspark.dbutils import DBUtils  # Import dbutils in Databricks
+else:
+    from mocks import dbutils  # Use mock for local testing
 
 
 def extract(
@@ -18,6 +20,7 @@ def extract(
     file_path2="dbfs:/tmp/urbanization_state.csv",
 ):
     """Extract URLs to Databricks DBFS paths and process with Spark."""
+
     # Remove conflicting directory
     conflicting_path = "dbfs:/tmp/urbanization_state_subset/"
     try:
@@ -28,41 +31,29 @@ def extract(
 
     # Download and save files
     print("Downloading and saving files...")
-    try:
-        data1 = requests.get(url).content.decode("utf-8")
-        data2 = requests.get(url2).content.decode("utf-8")
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to download files: {e}")
-        return
+    data1 = requests.get(url).content.decode("utf-8")
+    data2 = requests.get(url2).content.decode("utf-8")
 
-    try:
-        dbutils.fs.put(file_path, data1, overwrite=True)
-        dbutils.fs.put(file_path2, data2, overwrite=True)
-        print("Files saved to DBFS.")
-    except Exception as e:
-        print(f"Failed to save files to DBFS: {e}")
-        return
+    dbutils.fs.put(file_path, data1, overwrite=True)
+    dbutils.fs.put(file_path2, data2, overwrite=True)
 
     # Initialize Spark session
     spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
 
-    try:
-        # Read the second file into a Spark DataFrame
-        df = spark.read.csv(file_path2, header=True, inferSchema=True)
+    # Read the second file into a Spark DataFrame
+    df = spark.read.csv(file_path2, header=True, inferSchema=True)
 
-        # Select the first 121 rows
-        df_subset = df.limit(121)
+    # Select the first 121 rows
+    df_subset = df.limit(121)
 
-        # Save the subset to a unique directory
-        unique_output_dir = "dbfs:/tmp/urbanization_state_subset/"
-        df_subset.coalesce(1).write.mode("overwrite").csv(unique_output_dir, header=True)
+    # Save the subset to a unique directory
+    unique_output_dir = "dbfs:/tmp/urbanization_state_subset/"
+    df_subset.coalesce(1).write.mode("overwrite").csv(unique_output_dir, header=True)
 
-        # Retrieve the exact file path
-        output_files = dbutils.fs.ls(unique_output_dir)
-        output_file = [f.path for f in output_files if f.path.endswith(".csv")][0]
-        print(f"Subset saved to {output_file}")
-    except Exception as e:
-        print(f"Failed to process and save subset: {e}")
+    # Retrieve the exact file path
+    output_files = dbutils.fs.ls(unique_output_dir)
+    output_file = [f.path for f in output_files if f.path.endswith(".csv")][0]
+    print(f"Subset saved to {output_file}")
 
 
 if __name__ == "__main__":
