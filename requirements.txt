@@ -14,3 +14,4 @@ databricks-sql-connector==2.4.0
 pyspark
 requests==2.31.0
 mock==5.0.2
+matplotlib
