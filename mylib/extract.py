@@ -6,11 +6,15 @@ import importlib.util
 from pyspark.sql import SparkSession
 import requests
 
-# Check if dbutils is available
-if importlib.util.find_spec("pyspark.dbutils"):
-    pass
-else:
-    from mocks import dbutils  # Use mock for local testing
+
+# Helper function to check if `dbutils` is available
+def get_dbutils(spark):
+    try:
+        from pyspark.dbutils import DBUtils
+        return DBUtils(spark)
+    except ImportError:
+        print("dbutils is not available in this environment.")
+        return None
 
 
 def extract(
@@ -20,6 +24,13 @@ def extract(
     file_path2="dbfs:/tmp/urbanization_state.csv",
 ):
     """Extract URLs to Databricks DBFS paths and process with Spark."""
+
+    # Initialize Spark session
+    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
+    dbutils = get_dbutils(spark)
+
+    if not dbutils:
+        raise EnvironmentError("dbutils is required but not available in this environment.")
 
     # Remove conflicting directory
     conflicting_path = "dbfs:/tmp/urbanization_state_subset/"
@@ -36,9 +47,6 @@ def extract(
 
     dbutils.fs.put(file_path, data1, overwrite=True)
     dbutils.fs.put(file_path2, data2, overwrite=True)
-
-    # Initialize Spark session
-    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
 
     # Read the second file into a Spark DataFrame
     df = spark.read.csv(file_path2, header=True, inferSchema=True)
