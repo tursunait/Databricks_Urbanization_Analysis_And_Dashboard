@@ -1,150 +1,84 @@
-"""
-Extract a dataset 
-Urbanization dataset
-"""
-import os
 import requests
 from pyspark.sql import SparkSession
-from dotenv import load_dotenv
-from unittest.mock import MagicMock
-
-# Mock dbutils if not in Databricks
-try:
-    from pyspark.dbutils import DBUtils
-    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
-    dbutils = DBUtils(spark)
-except ImportError:
-    print("dbutils is not available in this environment. Using a mock implementation.")
-    dbutils = MagicMock()
-    dbutils.fs.rm = MagicMock()
-    dbutils.fs.put = MagicMock()
-    dbutils.fs.ls = MagicMock(return_value=[])
-
-
-def is_databricks_environment():
-    """Check if the script is running in Databricks."""
-    return os.getenv("DATABRICKS_RUNTIME_VERSION") is not None
-
-
-def convert_path(path):
-    """Convert file paths based on the environment."""
-    if is_databricks_environment():
-        return path
-    else:
-        # Convert `dbfs:/` paths to local paths for non-Databricks environments
-        return path.replace("dbfs:/", "/tmp/")
-
-
-def ensure_directory_exists(path):
-    """Ensures that the directory for the given path exists."""
-    directory = os.path.dirname(path)
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print(f"Created directory: {directory}")
-    else:
-        print(f"Directory already exists: {directory}")
 
 
 def extract(
     url="https://github.com/fivethirtyeight/data/raw/refs/heads/master/urbanization-index/urbanization-census-tract.csv",
-    url2="https://github.com/fivethirtyeight/data/raw/refs/heads/master/urbanization-index/urbanization-state.csv",
-    file_path="dbfs:/tmp/urbanization.csv",
-    file_path2="dbfs:/tmp/urbanization_state.csv",
+    file_path="/dbfs/tmp/urbanization_census_tract.csv",
+    timeout=10,
 ):
-    """Extract URLs to Databricks DBFS paths and process with Spark."""
-    # Load environment variables
-    load_dotenv()
-    server_host = os.getenv("SERVER_HOSTNAME")
-    access_token = os.getenv("ACCESS_TOKEN")
-    http_path = os.getenv("HTTP_PATH")
+    """
+    Downloads a file from a specified URL and saves it to the given file path.
 
-    if not server_host or not access_token or not http_path:
-        raise ValueError("Environment variables SERVER_HOSTNAME, ACCESS_TOKEN, or HTTP_PATH are missing.")
+    Args:
+        url (str): The URL to download the file from.
+        file_path (str): The path to save the downloaded file.
+        timeout (int): Timeout for the HTTP request.
 
-    print(f"Using server: {server_host}, HTTP Path: {http_path}")
+    Returns:
+        str: The path to the saved file.
+    """
+    print(f"Downloading data from {url}...")
+    response = requests.get(url, timeout=timeout)
+    response.raise_for_status()
 
-    # Convert paths for local environment
-    file_path = convert_path(file_path)
-    file_path2 = convert_path(file_path2)
-    conflicting_path = convert_path("dbfs:/tmp/urbanization_state_subset/")
+    with open(file_path, "wb") as file:
+        file.write(response.content)
 
-    # Ensure directories exist for local paths
-    ensure_directory_exists(file_path)
-    ensure_directory_exists(file_path2)
+    print(f"File successfully downloaded to {file_path}")
+    return file_path
 
-    # Remove conflicting directory
-    try:
-        if is_databricks_environment():
-            dbutils.fs.rm(conflicting_path, recurse=True)
-        else:
-            if os.path.exists(conflicting_path):
-                os.rmdir(conflicting_path)
-        print(f"Removed conflicting directory: {conflicting_path}")
-    except Exception as e:
-        print(f"Could not remove conflicting path: {conflicting_path}. Error: {e}")
 
-    # Download and save files
-    print("Downloading and saving files...")
-    try:
-        data1 = requests.get(url).content.decode("utf-8")
-        data2 = requests.get(url2).content.decode("utf-8")
+def load_csv(file_path):
+    """
+    Loads data from a CSV file into a PySpark DataFrame.
 
-        if is_databricks_environment():
-            print("Saving to DBFS...")
-            dbutils.fs.put(file_path, data1, overwrite=True)
-            dbutils.fs.put(file_path2, data2, overwrite=True)
-            print("Files saved to DBFS.")
-        else:
-            print("Saving to local filesystem...")
-            with open(file_path, "w") as f:
-                f.write(data1)
-            with open(file_path2, "w") as f:
-                f.write(data2)
-            print(f"Files saved locally: {file_path}, {file_path2}")
-    except Exception as e:
-        print(f"Error writing files: {e}")
-        return
+    Args:
+        file_path (str): Path to the CSV file.
 
-    # Initialize Spark session
-    spark = SparkSession.builder.appName("UrbanizationDataExtraction").getOrCreate()
+    Returns:
+        DataFrame: Loaded Spark DataFrame.
+    """
+    print(f"Loading data from {file_path}...")
+    # Remove the /dbfs prefix for Spark to properly access the file in Databricks
+    spark_file_path = file_path.replace("/dbfs", "dbfs:")
+    spark = SparkSession.builder.appName("UrbanizationDataETL").getOrCreate()
+    return spark.read.csv(spark_file_path, header=True, inferSchema=True)
 
-    # Read the second file into a Spark DataFrame
-    try:
-        df = spark.read.csv(file_path2, header=True, inferSchema=True)
-    except Exception as e:
-        print(f"Error reading the file into Spark DataFrame: {e}")
-        return
 
-    # Select the first 121 rows
-    df_subset = df.limit(121)
+def save_random_sample(df, output_path, sample_fraction=0.1, seed=42):
+    """
+    Saves a random sample of the DataFrame as a CSV.
 
-    # Save the subset to a unique directory
-    unique_output_dir = convert_path("dbfs:/tmp/urbanization_state_subset/")
-    try:
-        df_subset.coalesce(1).write.mode("overwrite").csv(unique_output_dir, header=True)
-    except Exception as e:
-        print(f"Error saving the subset: {e}")
-        return
+    Args:
+        df (DataFrame): DataFrame to sample.
+        output_path (str): Output path for the CSV file.
+        sample_fraction (float): Fraction of the DataFrame to sample (0 < fraction <= 1).
+        seed (int): Seed for random sampling.
 
-    # Retrieve the exact file path
-    try:
-        if is_databricks_environment():
-            output_files = dbutils.fs.ls(unique_output_dir)
-            output_file = [
-                f"{unique_output_dir}{file_info.name}"
-                for file_info in output_files
-                if file_info.name.endswith(".csv")
-            ][0]
-        else:
-            output_files = os.listdir(unique_output_dir)
-            output_file = [
-                os.path.join(unique_output_dir, f) for f in output_files if f.endswith(".csv")
-            ][0]
-
-        print(f"Subset saved to {output_file}")
-    except Exception as e:
-        print(f"Error retrieving the exact file path: {e}")
+    Returns:
+        str: Path to the saved file.
+    """
+    print(f"Saving a random sample (fraction={sample_fraction}) to {output_path}...")
+    sampled_df = df.sample(withReplacement=False, fraction=sample_fraction, seed=seed)
+    sampled_df.coalesce(1).write.mode("overwrite").csv(output_path, header=True)
+    print(f"Random sample saved to {output_path}")
+    return output_path
 
 
 if __name__ == "__main__":
-    extract()
+    # URL and paths
+    dataset_url = "https://github.com/fivethirtyeight/data/raw/refs/heads/master/urbanization-index/urbanization-census-tract.csv"
+    csv_file_path = "/dbfs/tmp/urbanization_census_tract.csv"
+    output_dir = "dbfs:/tmp/urbanization_census_subset/"
+
+    # Step 1: Extract the dataset
+    file_path = extract(url=dataset_url, file_path=csv_file_path)
+
+    # Step 2: Load the dataset into a Spark DataFrame
+    df = load_csv(file_path)
+
+    # Step 3: Save a random sample of the DataFrame
+    save_random_sample(df, output_dir, sample_fraction=0.1)
+
+    print("ETL process with random sampling completed successfully.")

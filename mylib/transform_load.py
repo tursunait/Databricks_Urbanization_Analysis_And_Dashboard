@@ -3,52 +3,73 @@ Transforms and Loads data into Databricks
 """
 from pyspark.sql import SparkSession
 from pyspark.sql.types import DoubleType
-from dotenv import load_dotenv
+from pyspark.sql.functions import col
 
 
-def load(
-    dataset="/dbfs/tmp/urbanization.csv",
-    dataset2="/dbfs/tmp/urbanization_state.csv",
+def clean_columns(df):
+    """
+    Cleans column names to remove special characters and spaces.
+
+    Args:
+        df (DataFrame): Spark DataFrame to clean.
+
+    Returns:
+        DataFrame: DataFrame with cleaned column names.
+    """
+    print("Cleaning column names...")
+    return df.select(
+        [
+            col(c).alias(
+                c.replace("(", "")
+                .replace(")", "")
+                .replace(" ", "_")
+                .replace("-", "_")
+                .replace("/", "_")
+            )
+            for c in df.columns
+        ]
+    )
+
+
+def load_data(
+    dataset_path="dbfs:/tmp/urbanization_census_tract.csv",
+    database="default",
+    table="urbanization_data_tt284",
 ):
-    """Transforms and Loads data into Databricks using Spark"""
+    """
+    Transforms and Loads data into Databricks using Spark.
 
+    Args:
+        dataset_path (str): Path to the dataset file.
+        database (str): Database name in Databricks.
+        table (str): Table name to write data.
+
+    Returns:
+        str: Success or failure message.
+    """
     # Initialize Spark session
     spark = SparkSession.builder.appName("UrbanizationDataLoad").getOrCreate()
 
-    # Load datasets into Spark DataFrames
-    print("Loading datasets into Spark DataFrames...")
-    df = spark.read.csv(dataset, header=True, inferSchema=True)
-    df2 = spark.read.csv(dataset2, header=True, inferSchema=True)
-
-    # Standardize column names
-    df = df.toDF(*[col.lower() for col in df.columns])
-    df2 = df2.toDF(*[col.lower() for col in df2.columns])
-
-    # Cast lat_tract to the correct data type
-    df = df.withColumn("lat_tract", df["lat_tract"].cast(DoubleType()))
-
-    # Load environment variables for Databricks connection
-    load_dotenv()
-    database = "default"
-    table1 = "urbanizationdb_tt284"
-    table2 = "urbanization_stateDB_tt284"
-
     try:
-        # Use Spark to create or replace the first table and insert data
-        print(f"Writing data to table: {database}.{table1}")
+        # Load dataset into a Spark DataFrame
+        print(f"Loading dataset from {dataset_path} into Spark DataFrame...")
+        df = spark.read.csv(dataset_path, header=True, inferSchema=True)
+
+        # Clean column names
+        df = clean_columns(df)
+
+        # Ensure numeric column types where applicable (example: "lat_tract")
+        if "lat_tract" in df.columns:
+            df = df.withColumn("lat_tract", df["lat_tract"].cast(DoubleType()))
+
+        # Write the DataFrame into a Databricks table
+        print(f"Writing data to table: {database}.{table}")
         df.write.format("delta") \
             .mode("overwrite") \
             .option("overwriteSchema", "true") \
-            .saveAsTable(f"{database}.{table1}")
+            .saveAsTable(f"{database}.{table}")
 
-        # Use Spark to create or replace the second table and insert data
-        print(f"Writing data to table: {database}.{table2}")
-        df2.select("state", "urbanindex").write.format("delta") \
-            .mode("overwrite") \
-            .option("overwriteSchema", "true") \
-            .saveAsTable(f"{database}.{table2}")
-
-        print("Data inserted successfully.")
+        print(f"Data successfully written to {database}.{table}")
         return "success"
 
     except Exception as e:
@@ -57,4 +78,4 @@ def load(
 
 
 if __name__ == "__main__":
-    load()
+    load_data()
