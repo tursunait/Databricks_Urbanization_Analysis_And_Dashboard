@@ -1,93 +1,84 @@
-## Python Script interacting SQL Queries with Databricks - Urbanization Index Analysis 🚀
+## Data Pipeline with Databricks
 ### By Tursunai Turumbekova
-[![CI](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml/badge.svg?branch=main)](https://github.com/nogibjj/SQL_Query_Databricks1_Tursunai/actions/workflows/cicd.yml)
+([![CI](https://github.com/nogibjj/Databricks_Data_Pipeline/actions/workflows/cicd.yml/badge.svg)](https://github.com/nogibjj/Databricks_Data_Pipeline/actions/workflows/cicd.yml))
 
-Welcome to my project, where data meets cloud! This project takes you on an analytical journey through urbanization data, leveraging **Databricks SQL Warehouse** to query large datasets and discover patterns about urbanization across various states. We’ll be diving into urbanization metrics, from identifying the most urbanized states to analyzing population distributions. 🌍🏙️
+This project builds upon an earlier PySpark implementation to leverage the Databricks ecosystem. It demonstrates the creation and execution of a Databricks pipeline using PySpark for managing and analyzing datasets. The primary focus of this project is on extracting, transforming, and diving into urbanization metrics data from FiveThirtyEight, utilizing Databricks APIs and Python libraries.
 
-## Project Overview 🧐
+## Key Features
 
-This project uses **Databricks** as the database engine to store, query, and analyze joint urbanization datasets from FiveThirtyEight public dataset. It’s structured to demonstrate the power of SQL queries when applied to real-world datasets, giving you a deeper look into:
-- **Urbanization trends** by state
-- **Population dynamics** within urbanized areas
-- **Interesting insights** derived from urbanization indices over time
+1. **Data Extraction**
+   - Utilizes the `requests` library to fetch datasets from specified URLs.
+   - Stores the extracted data in the Databricks FileStore for further processing.
 
-The code performs the heavy lifting in Databricks, allowing you to focus on understanding the results. Along the way, all the executed queries and results are meticulously logged in the `query_log.md` file for transparency and easy tracking.
+2. **Databricks Environment Setup**
+   - Establishes a connection to the Databricks environment using environment variables for authentication (`SERVER_HOSTNAME` and `ACCESS_TOKEN`).
+   - Configures Databricks clusters to support PySpark workflows.
 
-## Key Features 🔑
+3. **Data Transformation and Load**
+   - Converts CSV files into Spark DataFrames for processing.
+   - Transforms and stores the processed data as Delta Lake Tables in the Databricks environment.
 
-- **ETL Pipeline**: Extract data from public datasets, transform it, and load it into Databricks SQL Warehouse.
-- **Data Analysis**: Execute complex SQL queries to identify patterns such as average urbanization, state-wise comparisons, and urban population density.
-- **Query Logging**: Each query executed is logged with its result, so you can track every operation in the `query_log.md` file.
-- **Seamless Cloud Integration**: The project leverages Databricks for cloud-based computation, allowing efficient analysis of large datasets.
+4. **Query Transformation and Visualization**
+   - Performs predefined Spark SQL queries to transform the data.
+   - Creates visualizations from the transformed Spark DataFrames to analyze various metrics.
 
+5. **File Path Validation**
+   - Implements a function to check if specified file paths exist in the Databricks FileStore.
+   - Verifies connectivity with the Databricks API for automated workflows.
 
-## Example Queries 💡
-Here are a few queries you might find fun to run:
+6. **Automated Job Trigger via GitHub Push**
+   - Configures a GitHub workflow to trigger a job run in the Databricks workspace whenever new commits are pushed to the repository.
 
-### Top 5 States by Average Urbanization Index:
+## Project Components
 
-```sql
-SELECT us.state, round(avg(u.urbanindex)) AS urbanindex
-FROM default.urbanization_statedb_tt284 us RIGHT JOIN default.urbanizationdb_tt284 u ON us.state=u.state
-GROUP BY us.state
-ORDER BY urbanindex desc
-LIMIT 5;
-```
-SELECT us.state, round(avg(u.urbanindex)) AS urbanindex
-FROM default.urbanization_statedb_tt284 us RIGHT JOIN default.urbanizationdb_tt284 u on us.state=u.state
-group by us.state
-order by urbanindex desc;
-### States with the Largest Rural Areas (Low Urbanization Index):
+### Environment Setup
+- Create a Databricks workspace on Azure.
+- Connect your GitHub account to the Databricks workspace.
+- Set up a global init script for cluster start to store environment variables.
+- Create a Databricks cluster that supports PySpark operations.
+### Job Run from Automated Trigger:
+![Pipeline](img/Runs.png)
 
-```sql
-SELECT state, COUNT(*) AS rural_area_count
-FROM default.urbanizationdb_tt284
-WHERE urbanindex < 5
-GROUP BY state
-ORDER BY rural_area_count DESC;
-```
-### Correlation Between Population and Urbanization Index:
+### Pipeline Workflow
+1. **Data Extraction**
+   - **File:** `mylib/extract.py`
+   - Retrieves data from the source and stores it in Databricks FileStore.
 
-```sql
-SELECT CORR(urbanindex, population) AS correlation
-FROM default.urbanizationdb_tt284;
-```
-## Data Sources 📊
-The datasets used in this project are public datasets from FiveThirtyEight, focusing on urbanization and state-level metrics. You can find the datasets in the data/ directory or pull them directly using the extraction pipeline.
+2. **Data Transformation and Load**
+   - **File:** `mylib/transform_load.py`
+   - Converts raw data into Delta Lake Tables and loads them into the Databricks environment.
 
-## Project Structure 🗂️
-Here’s a quick overview of the key files and directories:
+3. **Query and Visualization**
+   - **File:** `mylib/query.py`
+   - Defines SQL queries and generates visualizations using Spark.
 
-```plaintext
-Copy code
-SQL_Query_Databricks1_Tursunai/
-├── data/                         # Contains the raw datasets
-├── mylib/                        # Contains the ETL and query scripts
-│   ├── extract.py                # Script to extract and store datasets
-│   ├── transform_load.py         # Script to transform and load data into Databricks
-│   └── query.py                  # Script to run queries on Databricks
-├── query_log.md                  # Logs all the queries and their results
-├── requirements.txt              # Python dependencies
-├── README.md                     # This fun guide!
-└── main.py                       # Main script for executing SQL queries
-```
-## Tools and Technologies 🛠️
-*Python*: For scripting the ETL and querying process.
-*Databricks*: Cloud service for querying and analyzing data.
-*SQL*: To perform data extraction and transformation on Databricks.
-*dotenv*: For environment variable management.
-*Makefile*: To automate tasks like extracting, transforming, and querying.
+![Pipeline](img/ETL.png)
 
-## Interactive Databricks Dashboard for Urbanization in the US 🌆
-This Databricks dashboard provides a visual exploration of urbanization trends across the United States. It combines population distribution, urbanization indices, and geographical data to give users a clear picture of urban development by state.
+## Sample Visualizations from Query
 
-Population Distribution: Displays the population across states, highlighting areas with higher urbanization.
-Geospatial Maps: Show population density and median urbanization index, offering an intuitive, visual understanding of demographic trends.
-Data Table: Provides specific metrics like population and urbanization index for further analysis.
-Why This Matters:
-Including this dashboard in the project enhances user interaction and understanding of complex data. It highlights Databricks' capabilities for processing and visualizing large datasets, providing actionable insights into urbanization patterns.
-The dataset contains geospatial data of the locations with urban density, an interactive 
-![Dashboard](Dashboard.png)
+![Pipeline](img/plot1.png)
+![Pipeline](img/plot2.png)
 
-## License 📄
-This project is licensed under the MIT License. See the LICENSE file for more details.
+## Preparation Steps
+
+1. Set up a Databricks workspace and cluster on Azure.
+2. Clone this repository into your Databricks workspace.
+3. Configure environment variables (`SERVER_HOSTNAME` and `ACCESS_TOKEN`) for API access.
+4. Create a Databricks job to build and run the pipeline:
+   - **Extract Task:** `mylib/extract.py`
+   - **Transform and Load Task:** `mylib/transform_load.py`
+   - **Query and Visualization Task:** `mylib/query.py`
+
+## Additional Notes
+
+- This project is specifically designed for use within the Databricks environment. Due to the dependency on Databricks' infrastructure, some functionalities cannot be replicated outside the workspace (e.g., testing data access in a GitHub environment).
+- A YouTube video demonstration of the pipeline implementation and data analysis is available for further insight.
+
+## Future Enhancements
+
+- Expand the pipeline to handle additional datasets.
+- Integrate advanced visualizations and analytics using tools like Tableau or Power BI.
+- Optimize the pipeline for larger datasets and higher computational efficiency.
+
+Feel free to explore, contribute, and reach out with suggestions or questions!
+
