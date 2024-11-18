@@ -1,94 +1,63 @@
-"""
-Transforms and Loads data into Databricks
-"""
+from pyspark.sql.functions import col
 
-import os
-from databricks import sql
-import pandas as pd
-from dotenv import load_dotenv
+def transform(data_path, spark):
+    """
+    Transforms the dataset by cleaning column names.
 
+    Args:
+        data_path (str): Path to the dataset file.
+        spark (SparkSession): Active Spark session.
 
-# Load the csv files and insert into Databricks
-def load(
-    dataset="data/urbanization.csv",
-    dataset2="data/urbanization_state.csv",
-):
-    """Transforms and Loads data into Databricks"""
+    Returns:
+        DataFrame: Transformed DataFrame with cleaned column names.
+    """
+    if spark is None:
+        raise ValueError("A Spark session must be provided.")
 
-    # Load datasets
-    print("Loading datasets...")
-    df = pd.read_csv(dataset, delimiter=",")
-    df2 = pd.read_csv(dataset2, delimiter=",")
+    print(f"Loading data from {data_path}...")
+    df = spark.read.csv(data_path, header=True, inferSchema=True)
 
-    # Load environment variables for Databricks connection
-    load_dotenv()
-    server_host = os.getenv("SERVER_HOSTNAME")
-    access_token = os.getenv("ACCESS_TOKEN")
-    http_path = os.getenv("HTTP_PATH")
+    print("Cleaning column names...")
+    transformed_df = df.select(
+        [
+            col(c).alias(
+                c.replace("(", "")
+                .replace(")", "")
+                .replace(" ", "_")
+                .replace("-", "_")
+                .replace("/", "_")
+            )
+            for c in df.columns
+        ]
+    )
 
-    try:
-        # Connect to Azure Databricks
-        with sql.connect(
-            server_hostname=server_host,
-            http_path=http_path,
-            access_token=access_token,
-        ) as connection:
-            c = connection.cursor()
-
-            # Check if ServeTimesDB already exists, if not, create it
-            c.execute("SHOW TABLES FROM default LIKE 'urbanizationDB_tt284'")
-            result = c.fetchall()
-
-            if not result:
-                # Create urbanizationDB_tt284 if it doesn't exist
-                c.execute(
-                    """
-                    CREATE TABLE default.urbanizationDB_tt284 (
-                        statefips INT, state STRING, gisjoin STRING, lat_tract FLOAT,
-                        long_tract FLOAT, population INT, adj_radiuspop_5 FLOAT, urbanindex FLOAT
-                    )
-                    """
-                )
-                # Insert data into urbanizationDB_tt284
-                data_to_insert_df1 = df.values.tolist()
-                insert_query_df1 = """
-                    INSERT INTO default.urbanizationDB_tt284 
-                    (statefips, state, gisjoin, lat_tract, long_tract, population, adj_radiuspop_5, urbanindex)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """
-                c.executemany(insert_query_df1, data_to_insert_df1)
-
-            # Check if urbanization_stateDB_tt284 exists, if not, create it
-            c.execute("SHOW TABLES FROM default LIKE 'urbanization_stateDB_tt284'")
-            result = c.fetchall()
-
-            if not result:
-                # Create urbanization_stateDB_tt284 if it doesn't exist
-                c.execute(
-                    """
-                    CREATE TABLE default.urbanization_stateDB_tt284 (
-                        state STRING, urbanindex FLOAT
-                    )
-                    """
-                )
-                # Insert data into urbanization_stateDB_tt284
-                data_to_insert_df2 = df2[["state", "urbanindex"]].values.tolist()
-                insert_query_df2 = """
-                    INSERT INTO default.urbanization_stateDB_tt284 (state, urbanindex)
-                    VALUES (?, ?)
-                """
-                c.executemany(insert_query_df2, data_to_insert_df2)
-
-            # Commit all changes
-            connection.commit()
-
-            print("Data inserted successfully.")
-            return "success"
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        return "failure"
+    print("Data transformation complete.")
+    return transformed_df
 
 
-if __name__ == "__main__":
-    load()
+def load(df, output_path, file_format="parquet"):
+    """
+    Loads the DataFrame into the specified file format.
+
+    Args:
+        df (DataFrame): DataFrame to save.
+        output_path (str): Output path for the saved file.
+        file_format (str): Format to save the data ('parquet', 'csv', or 'json').
+
+    Returns:
+        str: Success message with the output path and format.
+    """
+    print(f"Saving data to {output_path} in {file_format} format...")
+    if file_format == "parquet":
+        df.write.mode("overwrite").parquet(output_path)
+    elif file_format == "csv":
+        df.write.mode("overwrite").option("header", True).csv(output_path)
+    elif file_format == "json":
+        df.write.mode("overwrite").json(output_path)
+    else:
+        raise ValueError("Unsupported file format. Choose 'parquet', 'csv', or 'json'.")
+
+    print(f"Data successfully saved to {output_path}")
+    return f"Data saved to {output_path} in {file_format} format."
+
+
