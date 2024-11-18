@@ -1,7 +1,6 @@
 from pyspark.sql.functions import col
 from pyspark.sql import SparkSession
 
-
 def transform(data_path, spark):
     """
     Transforms the dataset by cleaning column names.
@@ -63,18 +62,3 @@ def load(df, output_path, file_format="parquet"):
     return f"Data saved to {output_path} in {file_format} format."
 
 
-if __name__ == "__main__":
-    # Initialize Spark session
-    spark = SparkSession.builder.appName("TransformLoadUrbanizationData").getOrCreate()
-
-    # Input and output paths
-    input_path = "dbfs:/tmp/urbanization_census_tract.csv"
-    output_path = "dbfs:/tmp/urbanization_census_tract_transformed.parquet"
-    file_format = "parquet"  # Change to 'csv' or 'json' if needed
-
-    # Transform and load
-    try:
-        transformed_df = transform(data_path=input_path, spark=spark)
-        load(transformed_df, output_path=output_path, file_format=file_format)
-    except Exception as e:
-        print(f"An error occurred: {e}")

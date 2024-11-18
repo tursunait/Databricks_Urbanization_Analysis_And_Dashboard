@@ -32,7 +32,7 @@ def extract(
     return file_path
 
 
-def load_data(file_path):
+def load_csv(file_path):
     """
     Loads data from a CSV file into a PySpark DataFrame.
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     file_path = extract(url=dataset_url, file_path=csv_file_path)
 
     # Step 2: Load the dataset into a Spark DataFrame
-    urbanization_df = load_data(file_path)
+    urbanization_df = load_csv(file_path)
 
     # Step 3: Rename columns to remove special characters
     urbanization_df = urbanization_df.select(
