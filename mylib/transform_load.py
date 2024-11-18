@@ -1,7 +1,6 @@
 '''
     Transform-Load
 '''
-from pyspark.sql.functions import col, year, month, dayofmonth
 
 def transform(data_path="data/urbanization_census_tract.csv", spark=None):
     if spark is None:
