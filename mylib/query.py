@@ -9,7 +9,7 @@ import seaborn as sns
 
 
 def query_table(
-    table_name="urbanization_data_tt284",
+    table_name="urbanization_census_tract",
     database="default",
     limit=1000,
     mock_mode=False
@@ -98,7 +98,7 @@ def viz_main():
     Main function for querying and visualizing urbanization data.
     """
     # Define table and database
-    table_name = "urbanization_data_tt284"
+    table_name = "urbanization_census_tract"
     database = "default"
 
     # Query the data
