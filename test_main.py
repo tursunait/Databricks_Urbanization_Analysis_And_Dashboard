@@ -1,43 +1,60 @@
 import unittest
-from unittest.mock import patch
-import main
+from unittest.mock import patch, MagicMock
+from pyspark.sql import SparkSession
+from main import main
 
-
-class TestMain(unittest.TestCase):
+class TestUrbanizationDataPipeline(unittest.TestCase):
 
     @patch("main.extract")
-    @patch("sys.argv", ["main.py", "extract"])
-    def test_extract(self, mock_extract):
-        """Test the extract functionality."""
-        main.main()
-        mock_extract.assert_called_once()
-
+    @patch("main.transform")
     @patch("main.load")
-    @patch("sys.argv", ["main.py", "transform_load"])
-    def test_transform_load(self, mock_load):
-        """Test the transform and load functionality."""
-        main.main()
-        mock_load.assert_called_once()
+    @patch("main.query_table")
+    @patch("main.visualize_population_vs_urbanindex")
+    @patch("main.visualize_urbanindex_distribution")
+    def test_main_pipeline(
+        self,
+        mock_visualize_distribution,
+        mock_visualize_population,
+        mock_query_table,
+        mock_load,
+        mock_transform,
+        mock_extract,
+    ):
+        # Mock the Spark session
+        spark = SparkSession.builder.appName("UrbanizationDataPipelineTest").getOrCreate()
 
-    @patch("main.general_query")
-    @patch(
-        "sys.argv",
-        ["main.py", "general_query", "SELECT * FROM default.urbanizationdb LIMIT 10"],
-    )
-    def test_general_query(self, mock_general_query):
-        """Test the general query functionality."""
-        main.main()
-        mock_general_query.assert_called_once_with(
-            "SELECT * FROM default.urbanizationdb LIMIT 10"
-        )
+        # Mock the extract function
+        mock_extract.return_value = "/dbfs/tmp/urbanization_census_tract.csv"
 
-    @patch("sys.argv", ["main.py", "invalid_action"])
-    def test_invalid_action(self):
-        """Test handling of invalid actions."""
-        with self.assertRaises(SystemExit) as cm:
-            main.main()
-        self.assertEqual(cm.exception.code, 1)
+        # Mock the transform function to return a mock DataFrame
+        mock_transformed_df = MagicMock()
+        mock_transform.return_value = mock_transformed_df
 
+        # Mock the load function
+        mock_load.return_value = None
+
+        # Mock the query_table function to return a mock DataFrame
+        mock_queried_df = MagicMock()
+        mock_query_table.return_value = mock_queried_df
+
+        # Mock the visualization functions
+        mock_visualize_population.return_value = None
+        mock_visualize_distribution.return_value = None
+
+        # Run the main function
+        with patch("main.SparkSession.builder.getOrCreate", return_value=spark):
+            main()
+
+        # Assert the functions were called
+        mock_extract.assert_called_once()
+        mock_transform.assert_called_once_with("/dbfs/tmp/urbanization_census_tract.csv".replace("/dbfs", "dbfs:"), spark)
+        mock_load.assert_called_once_with(mock_transformed_df, output_path="output/urbanization_census_tract.parquet", file_format="parquet")
+        mock_query_table.assert_called_once_with(table_name="urbanization_data", database="urbanization_db", limit=1000)
+        mock_visualize_population.assert_called_once_with(mock_queried_df)
+        mock_visualize_distribution.assert_called_once_with(mock_queried_df)
+
+        # Stop the Spark session
+        spark.stop()
 
 if __name__ == "__main__":
     unittest.main()
